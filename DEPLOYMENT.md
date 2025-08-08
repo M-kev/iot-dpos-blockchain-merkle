@@ -18,6 +18,13 @@ This guide provides step-by-step instructions for deploying the energy-efficient
 - Network connection
 - `python3-dev` (required for some Python packages)
 
+### New Features in This Version
+- **Merkle Tree Integration**: Efficient transaction verification with O(log n) complexity
+- **Performance Monitoring**: Real-time Merkle tree operation metrics
+- **Enhanced Security**: Cryptographic proofs for transaction inclusion
+- **Optimized Storage**: Merkle root storage in database
+- **API Endpoints**: New endpoints for Merkle proof operations
+
 ## Network Setup
 
 1. Configure static IP addresses for all devices:
@@ -46,8 +53,8 @@ This guide provides step-by-step instructions for deploying the energy-efficient
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/M-kev/iot-dpos-blockchain.git
-   cd iot-dpos-blockchain
+   git clone https://github.com/YOUR_USERNAME/dpos-merkle-blockchain.git
+   cd dpos-merkle-blockchain
    ```
 
 3. Make the setup script executable:
@@ -78,8 +85,8 @@ This guide provides step-by-step instructions for deploying the energy-efficient
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/M-kev/iot-dpos-blockchain.git
-   cd iot-dpos-blockchain
+   git clone https://github.com/YOUR_USERNAME/dpos-merkle-blockchain.git
+   cd dpos-merkle-blockchain
    ```
 
 3. Make the setup script executable:
@@ -125,6 +132,18 @@ This guide provides step-by-step instructions for deploying the energy-efficient
    sudo journalctl -u blockchain-node -f
    ```
 
+4. Test Merkle tree features:
+   ```bash
+   # Test Merkle proof generation
+   curl "http://192.168.1.101:8001/api/merkle-proof/0/0"
+   
+   # Test transaction verification
+   curl "http://192.168.1.101:8001/api/verify-transaction/0?transaction_data={\"type\":\"stake_distribution\"}"
+   
+   # Get Merkle performance metrics
+   curl "http://192.168.1.101:8001/api/merkle-performance"
+   ```
+
 ## Troubleshooting
 
 1. MQTT Connection Issues:
@@ -143,6 +162,12 @@ This guide provides step-by-step instructions for deploying the energy-efficient
    - Verify port accessibility: `netstat -tulpn | grep 800`
    - Check firewall settings: `sudo ufw status`
    - Verify node is running: `sudo systemctl status blockchain-node`
+
+4. Merkle Tree Issues:
+   - Check Merkle tree validation in logs: `grep -i "merkle" /var/log/syslog`
+   - Verify database schema: Check if `merkle_root` column exists in blocks table
+   - Test Merkle proof generation: Use the API endpoints mentioned above
+   - Monitor Merkle performance: Check `/api/merkle-performance` endpoint
 
 ## Maintenance
 
