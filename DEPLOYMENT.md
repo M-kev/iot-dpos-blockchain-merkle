@@ -53,8 +53,8 @@ This guide provides step-by-step instructions for deploying the energy-efficient
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/dpos-merkle-blockchain.git
-   cd dpos-merkle-blockchain
+   git clone https://github.com/M-kev/iot-dpos-blockchain-merkle.git
+   cd iot-dpos-blockchain-merkle
    ```
 
 3. Make the setup script executable:
@@ -85,8 +85,8 @@ This guide provides step-by-step instructions for deploying the energy-efficient
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/dpos-merkle-blockchain.git
-   cd dpos-merkle-blockchain
+   git clone https://github.com/M-kev/iot-dpos-blockchain-merkle.git
+   cd iot-dpos-blockchain-merkle
    ```
 
 3. Make the setup script executable:

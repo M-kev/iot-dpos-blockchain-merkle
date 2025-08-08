@@ -16,8 +16,8 @@ fi
 NODE_ID="pi_node_$NODE_NUM"
 echo "Setting up node: $NODE_ID"
 
-REPO_URL=https://github.com/M-kev/iot-dpos-blockchain.git  # <-- Replace with your actual repo URL
-REPO_DIR="$HOME/iot-dpos-blockchain"
+REPO_URL=https://github.com/M-kev/iot-dpos-blockchain-merkle.git
+REPO_DIR="$HOME/iot-dpos-blockchain-merkle"
 
 # Clone the repository if not already present
 if [ ! -d "$REPO_DIR/.git" ]; then
@@ -34,24 +34,24 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create necessary directories
-mkdir -p ~/iot-dpos-blockchain/blockchain_data
-mkdir -p ~/iot-dpos-blockchain/static
-mkdir -p ~/iot-dpos-blockchain/data  # For SQLite database
+mkdir -p ~/iot-dpos-blockchain-merkle/blockchain_data
+mkdir -p ~/iot-dpos-blockchain-merkle/static
+mkdir -p ~/iot-dpos-blockchain-merkle/data  # For SQLite database
 
 # Set proper permissions
-chmod -R 755 ~/iot-dpos-blockchain
-chown -R $USER:$USER ~/iot-dpos-blockchain
+chmod -R 755 ~/iot-dpos-blockchain-merkle
+chown -R $USER:$USER ~/iot-dpos-blockchain-merkle
 
 # Ensure the data directory is writable
-chmod 777 ~/iot-dpos-blockchain/data
+chmod 777 ~/iot-dpos-blockchain-merkle/data
 
 # Create an empty database file to ensure proper permissions
-touch ~/iot-dpos-blockchain/data/blockchain.db
-chmod 666 ~/iot-dpos-blockchain/data/blockchain.db
+touch ~/iot-dpos-blockchain-merkle/data/blockchain.db
+chmod 666 ~/iot-dpos-blockchain-merkle/data/blockchain.db
 
 # Create .env file with the correct NODE_ID
 echo "Creating .env file with NODE_ID=$NODE_ID"
-cat > ~/iot-dpos-blockchain/.env << EOF
+cat > ~/iot-dpos-blockchain-merkle/.env << EOF
 NODE_ID=$NODE_ID
 EOF
 
@@ -63,11 +63,11 @@ After=network.target
 
 [Service]
 User=$USER
-WorkingDirectory=$HOME/iot-dpos-blockchain
-Environment="PATH=$HOME/iot-dpos-blockchain/venv/bin:/usr/bin"
-Environment="PYTHONPATH=$HOME/iot-dpos-blockchain:$HOME/iot-dpos-blockchain/src"
+WorkingDirectory=$HOME/iot-dpos-blockchain-merkle
+Environment="PATH=$HOME/iot-dpos-blockchain-merkle/venv/bin:/usr/bin"
+Environment="PYTHONPATH=$HOME/iot-dpos-blockchain-merkle:$HOME/iot-dpos-blockchain-merkle/src"
 Environment="NODE_ID=$NODE_ID"
-ExecStart=$HOME/iot-dpos-blockchain/venv/bin/python $HOME/iot-dpos-blockchain/src/main.py
+ExecStart=$HOME/iot-dpos-blockchain-merkle/venv/bin/python $HOME/iot-dpos-blockchain-merkle/src/main.py
 Restart=always
 RestartSec=10
 
