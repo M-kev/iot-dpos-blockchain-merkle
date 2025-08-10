@@ -501,7 +501,16 @@ class BlockchainNode:
                 from utils.merkle_utils import optimize_merkle_tree_for_verification
                 merkle_optimization = optimize_merkle_tree_for_verification(transactions_for_block)
                 
-                # Record Merkle tree performance metrics
+                # Measure Merkle tree creation performance
+                tree = merkle_performance_monitor.measure_tree_creation(transactions_for_block)
+                
+                # Measure proof generation for first transaction
+                if transactions_for_block:
+                    proof = merkle_performance_monitor.measure_proof_generation(tree, 0)
+                    # Measure proof verification
+                    merkle_performance_monitor.measure_proof_verification(tree, transactions_for_block[0], proof)
+                
+                # Record overall block creation performance
                 merkle_performance_monitor.record_operation(
                     "block_creation_with_merkle",
                     time.time() - start_time,

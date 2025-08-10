@@ -174,6 +174,20 @@ class DPoS:
                     print(f"[DPoS MERKLE] Transaction count mismatch for block {block.block_index}")
                     return False
                 
+                # Measure Merkle tree validation performance
+                try:
+                    from utils.merkle_performance import merkle_performance_monitor
+                    if block.transactions:
+                        # Measure proof generation and verification for first transaction
+                        proof = merkle_performance_monitor.measure_proof_generation(block.merkle_tree, 0)
+                        merkle_performance_monitor.measure_proof_verification(
+                            block.merkle_tree, 
+                            block.transactions[0], 
+                            proof
+                        )
+                except Exception as e:
+                    print(f"[DPoS MERKLE] Performance monitoring error: {e}")
+                
                 print(f"[DPoS MERKLE] Merkle tree validation successful for block {block.block_index}")
                 return True
             else:

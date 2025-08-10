@@ -423,8 +423,13 @@ async def get_merkle_proof(block_index: int, transaction_index: int) -> Dict[str
         if transaction_index >= len(block.transactions):
             raise HTTPException(status_code=404, detail="Transaction index out of range")
         
-        proof = block.get_merkle_proof(transaction_index)
+        # Measure proof generation performance
+        from utils.merkle_performance import merkle_performance_monitor
+        proof = merkle_performance_monitor.measure_proof_generation(block.merkle_tree, transaction_index)
         transaction = block.transactions[transaction_index]
+        
+        # Measure proof verification performance
+        is_valid = merkle_performance_monitor.measure_proof_verification(block.merkle_tree, transaction, proof)
         
         return {
             "block_index": block_index,
@@ -432,7 +437,7 @@ async def get_merkle_proof(block_index: int, transaction_index: int) -> Dict[str
             "transaction": transaction,
             "merkle_root": block.merkle_root,
             "proof": proof,
-            "proof_valid": block.verify_transaction_inclusion(transaction, proof)
+            "proof_valid": is_valid
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating Merkle proof: {str(e)}")
