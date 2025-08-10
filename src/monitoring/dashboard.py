@@ -406,8 +406,21 @@ async def get_system_metrics() -> Dict[str, Any]:
 @app.get("/api/merkle-performance")
 async def get_merkle_performance() -> Dict[str, Any]:
     """Get Merkle tree performance metrics."""
-    from utils.merkle_performance import merkle_performance_monitor
-    return merkle_performance_monitor.export_metrics()
+    try:
+        print("[DEBUG] Attempting to import merkle_performance_monitor...")
+        from utils.merkle_performance import merkle_performance_monitor
+        print("[DEBUG] Import successful, calling export_metrics...")
+        result = merkle_performance_monitor.export_metrics()
+        print(f"[DEBUG] Export successful, result keys: {list(result.keys())}")
+        return result
+    except ImportError as e:
+        print(f"[ERROR] Import failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to import Merkle performance monitor: {str(e)}")
+    except Exception as e:
+        print(f"[ERROR] Export failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error getting Merkle performance metrics: {str(e)}")
 
 @app.get("/api/merkle-proof/{block_index}/{transaction_index}")
 async def get_merkle_proof(block_index: int, transaction_index: int) -> Dict[str, Any]:
