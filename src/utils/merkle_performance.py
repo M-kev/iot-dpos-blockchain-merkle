@@ -1,5 +1,6 @@
 import time
 import statistics
+import math
 from typing import Dict, List, Any
 from collections import defaultdict
 from .merkle_tree import MerkleTree
@@ -105,7 +106,7 @@ class MerklePerformanceMonitor:
             # Estimate proof size based on tree height
             avg_tree_height = stats.get("tree_sizes", {}).get("avg_transactions", 10)
             if avg_tree_height > 0:
-                estimated_proof_size = max(1, int(statistics.log2(avg_tree_height)))
+                estimated_proof_size = max(1, int(math.log2(avg_tree_height)))
             else:
                 estimated_proof_size = 1
             efficiency["estimated_avg_proof_size"] = estimated_proof_size
