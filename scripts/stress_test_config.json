@@ -1,0 +1,52 @@
+{
+  "nodes": [
+    {
+      "name": "node1",
+      "host": "192.168.2.101",
+      "port": 8001,
+      "api_base": "/api"
+    },
+    {
+      "name": "node2",
+      "host": "192.168.2.102",
+      "port": 8002,
+      "api_base": "/api"
+    },
+    {
+      "name": "node3",
+      "host": "192.168.2.103",
+      "port": 8003,
+      "api_base": "/api"
+    },
+    {
+      "name": "node4",
+      "host": "192.168.2.104",
+      "port": 8004,
+      "api_base": "/api"
+    },
+    {
+      "name": "node5",
+      "host": "192.168.2.105",
+      "port": 8005,
+      "api_base": "/api"
+    },
+    {
+      "name": "node6",
+      "host": "192.168.2.106",
+      "port": 8006,
+      "api_base": "/api"
+    }
+  ],
+  "config": {
+    "duration_minutes": 30,
+    "transaction_rate_per_second": 10,
+    "concurrent_requests": 5,
+    "warmup_seconds": 60,
+    "cooldown_seconds": 30,
+    "metrics_interval_seconds": 5,
+    "enable_cpu_profiling": true,
+    "enable_heat_monitoring": true,
+    "enable_energy_monitoring": true,
+    "enable_performance_analysis": true
+  }
+}
