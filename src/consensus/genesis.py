@@ -14,7 +14,7 @@ class GenesisBlock:
             "pi_node_5": 1000,
             "pi_node_6": 1000
         }
-        self.fixed_timestamp = 1717777777  # Use a constant value for determinism
+        self.fixed_timestamp = int(time.time())  # Use current time for realistic intervals
         
     def create_genesis_block(self) -> Block:
         """Create the genesis block with initial stake distribution."""

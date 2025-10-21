@@ -134,10 +134,12 @@ class DPoS:
             return False
 
         # Check if block was created within the allowed time window
-        current_time = time.time()
-        if abs(current_time - block.timestamp) > self.block_time:
-            print(f"[DPoS VALIDATE] Block timestamp {block.timestamp} is too far from current time {current_time}")
-            return False
+        # Skip timestamp validation for genesis block (block_index 0)
+        if block.block_index > 0:
+            current_time = time.time()
+            if abs(current_time - block.timestamp) > self.block_time:
+                print(f"[DPoS VALIDATE] Block timestamp {block.timestamp} is too far from current time {current_time}")
+                return False
 
         # Validate Merkle tree integrity
         if not self._validate_merkle_tree(block):
