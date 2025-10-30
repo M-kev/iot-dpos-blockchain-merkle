@@ -171,12 +171,18 @@ class BlockchainNode:
             print(f"[HANDLE BLOCK] Merkle tree validation failed for block {block.hash}")
             return
         
-        if self.dpos.validate_block(block, energy_metrics['power_usage'], previous_block_timestamp, previous_block_index):
+        # Monitor validation operation
+        with self.metrics.monitor_operation('block_validation', operation_id=f"validate-{block.block_index}"):
+            is_valid = self.dpos.validate_block(block, energy_metrics['power_usage'], previous_block_timestamp, previous_block_index)
+        if is_valid:
             print(f"[HANDLE BLOCK] Block {block.hash} validation successful.")
             # Verify block chain (check previous hash)
             if self.blocks and block.previous_hash == self.blocks[-1].hash:
                 self.blocks.append(block)
+                # Record DB write
+                _db_start = time.time()
                 self.storage.save_block(block)
+                self.metrics.record_database_operation('save_block', time.time() - _db_start, rows_affected=len(block.transactions))
                 
                 # Record metrics
                 self.metrics.record_block_time(block.timestamp - previous_block_timestamp)
@@ -189,7 +195,9 @@ class BlockchainNode:
                     interval = block.timestamp - previous_block_timestamp
                     consensus_time = block.energy_metrics.get('consensus_time', 0)
                     power_usage = block.energy_metrics.get('power_usage', 0)
+                    _dbm_start = time.time()
                     self.storage.save_block_metrics(block.block_index, block.timestamp, interval, consensus_time, power_usage)
+                    self.metrics.record_database_operation('save_block_metrics', time.time() - _dbm_start, rows_affected=1)
                 except Exception as e:
                     print(f"[ANALYTICS] Failed saving block metrics for received block {block.block_index}: {e}")
                 
@@ -517,19 +525,21 @@ class BlockchainNode:
                     transaction_count=len(transactions_for_block)
                 )
                 
-                new_block = Block(
-                    block_index=len(self.blocks),
-                    timestamp=time.time(),
-                    transactions=transactions_for_block,
-                    previous_hash=self.blocks[-1].hash if self.blocks else "0" * 64,
-                    validator=current_validator,
-                    energy_metrics={
-                        **self.energy_monitor.get_system_metrics(),
-                        'consensus_time': time.time() - start_time,
-                        'merkle_tree_nodes': merkle_optimization['tree'].get_leaf_count(),
-                        'merkle_tree_height': merkle_optimization['tree'].get_tree_height()
-                    }
-                )
+                # Monitor block creation critical section
+                with self.metrics.monitor_operation('block_creation', operation_id=f"create-{len(self.blocks)}"):
+                    new_block = Block(
+                        block_index=len(self.blocks),
+                        timestamp=time.time(),
+                        transactions=transactions_for_block,
+                        previous_hash=self.blocks[-1].hash if self.blocks else "0" * 64,
+                        validator=current_validator,
+                        energy_metrics={
+                            **self.energy_monitor.get_system_metrics(),
+                            'consensus_time': time.time() - start_time,
+                            'merkle_tree_nodes': merkle_optimization['tree'].get_leaf_count(),
+                            'merkle_tree_height': merkle_optimization['tree'].get_tree_height()
+                        }
+                    )
 
                 print(f"[PROCESS TX] New block created with index {new_block.block_index} and hash {new_block.hash}.")
 
@@ -537,18 +547,24 @@ class BlockchainNode:
                 self.metrics.record_propagation_delay(time.time() - start_time)
 
                 # Publish new block
+                _net_start = time.time()
                 self.mqtt_client.publish_block(new_block.to_dict())
+                self.metrics.record_network_operation('publish_block', bytes_transferred=0, duration=time.time()-_net_start, success=True)
                 print(f"[PROCESS TX] Node {self.node_id} published new block: {new_block.hash}")
 
                 # Add block to local chain and save to storage
                 self.blocks.append(new_block)
+                _db_start = time.time()
                 self.storage.save_block(new_block)
+                self.metrics.record_database_operation('save_block', time.time() - _db_start, rows_affected=len(new_block.transactions))
                 # Persist per-block analytics
                 try:
                     interval = new_block.timestamp - previous_block_timestamp
                     consensus_time = new_block.energy_metrics.get('consensus_time', 0)
                     power_usage = new_block.energy_metrics.get('power_usage', 0)
+                    _dbm_start = time.time()
                     self.storage.save_block_metrics(new_block.block_index, new_block.timestamp, interval, consensus_time, power_usage)
+                    self.metrics.record_database_operation('save_block_metrics', time.time() - _dbm_start, rows_affected=1)
                 except Exception as e:
                     print(f"[ANALYTICS] Failed saving block metrics for local block {new_block.block_index}: {e}")
                 print(f"[PROCESS TX] Block {new_block.hash} added to local chain and saved.")
