@@ -147,18 +147,43 @@ class BlockchainNode:
         block = Block.from_dict(block_data)
         print(f"[HANDLE BLOCK] Node {self.node_id} received new block: {block.hash} (Block Index: {block.block_index})")
         
-        # Skip if we already have this block
-        if any(b.hash == block.hash for b in self.blocks):
-            print(f"[HANDLE BLOCK] Block {block.hash} already exists in chain.")
-            return
-            
-        # Determine previous block's details for validation
-        previous_block_timestamp = self.blocks[-1].timestamp if self.blocks else 0.0 # Use 0.0 or genesis block timestamp if no previous block
-        previous_block_index = self.blocks[-1].block_index if self.blocks else -1 # Use -1 or genesis block index if no previous block
-
-        if not self.blocks and block.block_index == 0: # This is the genesis block and we don't have it
-            previous_block_timestamp = 0.0 # No actual previous block for genesis
-            previous_block_index = -1 # No actual previous block for genesis
+        # Handle genesis block specially
+        if block.block_index == 0:
+            # Check if we already have a genesis block
+            if self.blocks and self.blocks[0].block_index == 0:
+                # Verify it's the same genesis block structure
+                from consensus.genesis import GenesisBlock
+                genesis_verifier = GenesisBlock()
+                if genesis_verifier.verify_genesis_block(block):
+                    # Same structure, already have it
+                    print(f"[HANDLE BLOCK] Received valid genesis block (already have one).")
+                else:
+                    print(f"[HANDLE BLOCK] Received genesis block with different structure, rejecting.")
+                return
+            else:
+                # We don't have a genesis block yet, accept this one
+                print(f"[HANDLE BLOCK] No genesis block found, accepting incoming genesis block.")
+                from consensus.genesis import GenesisBlock
+                genesis_verifier = GenesisBlock()
+                if genesis_verifier.verify_genesis_block(block):
+                    # Add genesis block
+                    self.blocks = [block]
+                    _db_start = time.time()
+                    self.storage.save_block(block)
+                    self.metrics.record_database_operation('save_block', time.time() - _db_start, rows_affected=len(block.transactions))
+                    print(f"[HANDLE BLOCK] Genesis block added to chain.")
+                else:
+                    print(f"[HANDLE BLOCK] Invalid genesis block structure, rejecting.")
+                return
+        else:
+            # Skip if we already have this block
+            if any(b.hash == block.hash for b in self.blocks):
+                print(f"[HANDLE BLOCK] Block {block.hash} already exists in chain.")
+                return
+                
+            # Determine previous block's details for validation
+            previous_block_timestamp = self.blocks[-1].timestamp if self.blocks else 0.0
+            previous_block_index = self.blocks[-1].block_index if self.blocks else -1
 
         # Check energy metrics before validation
         energy_metrics = self.energy_monitor.get_system_metrics()
@@ -331,6 +356,30 @@ class BlockchainNode:
                         try:
                             block = Block.from_dict(block_data)
                             print(f"[SYNC] Processing block {block.block_index} ({block.hash}) from peer {peer['id']}")
+                            
+                            # Handle genesis block during sync
+                            if block.block_index == 0:
+                                from consensus.genesis import GenesisBlock
+                                genesis_verifier = GenesisBlock()
+                                if not self.blocks or self.blocks[0].block_index != 0:
+                                    # We don't have genesis, accept it
+                                    if genesis_verifier.verify_genesis_block(block):
+                                        self.blocks = [block]  # Replace with genesis
+                                        self.storage.save_block(block)
+                                        print(f"[SYNC] Added genesis block from {peer['id']}")
+                                        current_prev_block_index = 0
+                                        current_prev_block_timestamp = block.timestamp
+                                        continue
+                                else:
+                                    # Already have genesis, skip if same structure
+                                    if genesis_verifier.verify_genesis_block(block):
+                                        print(f"[SYNC] Genesis block matches, skipping")
+                                        current_prev_block_index = 0
+                                        current_prev_block_timestamp = block.timestamp
+                                        continue
+                                    else:
+                                        print(f"[SYNC] Genesis block structure mismatch, skipping")
+                                        continue
                             
                             # During sync, be more lenient with validator checking
                             # Only check basic block structure, not strict validator validation

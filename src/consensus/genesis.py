@@ -5,6 +5,9 @@ import time
 from .block import Block
 
 class GenesisBlock:
+    # Fixed timestamp for deterministic genesis block creation across all nodes
+    GENESIS_TIMESTAMP = 1704067200.0  # Fixed: Jan 1, 2024 00:00:00 UTC
+    
     def __init__(self):
         self.initial_stakes = {
             "pi_node_1": 1000,
@@ -14,7 +17,7 @@ class GenesisBlock:
             "pi_node_5": 1000,
             "pi_node_6": 1000
         }
-        self.fixed_timestamp = int(time.time())  # Use current time for realistic intervals
+        self.fixed_timestamp = self.GENESIS_TIMESTAMP  # Fixed timestamp for all nodes
         
     def create_genesis_block(self) -> Block:
         """Create the genesis block with initial stake distribution."""
